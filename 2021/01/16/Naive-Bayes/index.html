@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>Naive Bayes | Wang Zeyuan&#39;s Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="基本方法输入：    * 设输入空间$\chi\subseteq \mathbf{R}^n$为$n$维向量的集合，输出空间为类标记集合$\gamma&#x3D;{c_1,c_2\cdots,c_K}$。    * 输入为特征向量$x\in\chi$，输出为类标记$y\in\gamma$。    * $X$是定义在输入空间$\chi$上的随机向量，$Y$是定义在输出空间$\gamma$上的随机变量。    *">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Naive Bayes">
+<meta property="og:url" content="https://lghigh.github.io/2021/01/16/Naive-Bayes/index.html">
+<meta property="og:site_name" content="Wang Zeyuan&#39;s Blog">
+<meta property="og:description" content="基本方法输入：    * 设输入空间$\chi\subseteq \mathbf{R}^n$为$n$维向量的集合，输出空间为类标记集合$\gamma&#x3D;{c_1,c_2\cdots,c_K}$。    * 输入为特征向量$x\in\chi$，输出为类标记$y\in\gamma$。    * $X$是定义在输入空间$\chi$上的随机向量，$Y$是定义在输出空间$\gamma$上的随机变量。    *">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-01-16T13:53:17.000Z">
+<meta property="article:modified_time" content="2021-01-16T14:55:13.616Z">
+<meta property="article:author" content="Wang Zeyuan">
+<meta property="article:tag" content="machine learn">
+<meta property="article:tag" content="bayes">
+<meta property="article:tag" content="classification">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Wang Zeyuan's Blog" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-source-code-pro@0.0.71/index.min.css">
+
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Wang Zeyuan&#39;s Blog</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS 订阅"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="搜索"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://lghigh.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-Naive-Bayes" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2021/01/16/Naive-Bayes/" class="article-date">
+  <time class="dt-published" datetime="2021-01-16T13:53:17.000Z" itemprop="datePublished">2021-01-16</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/MACHINE-LEARNING/">MACHINE_LEARNING</a>►<a class="article-category-link" href="/categories/MACHINE-LEARNING/NAIVE-BAYES/">NAIVE_BAYES</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      Naive Bayes
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="基本方法"><a href="#基本方法" class="headerlink" title="基本方法"></a>基本方法</h2><p><strong>输入</strong>：<br>    * 设输入空间$\chi\subseteq \mathbf{R}^n$为$n$维向量的集合，输出空间为类标记集合$\gamma={c_1,c_2\cdots,c_K}$。<br>    * 输入为特征向量$x\in\chi$，输出为类标记$y\in\gamma$。<br>    * $X$是定义在输入空间$\chi$上的随机向量，$Y$是定义在输出空间$\gamma$上的随机变量。<br>    * $P(X,Y)$是$X$和$Y$的联合概率分布。训练数据集$T={(x_1,y_1),(x_2,y_2),\cdots,(x_N,y_N)}$由$P(X,Y)$独立同分布产生。其中$x_i=(x_i^{(1)},x_i^{(2)},\cdots,x_i^{(n)})^T$，$x_i^{(j)}$是第$i$个样本的第$j$个特征，$x_i^{(j)}\in {a_{j1}, a_{j2}, \cdots, a_{jS_j}}$，$a_{jl}$是第$j$个特征可能的第$l$个值</p>
+<p><strong>朴素贝叶斯假设</strong>（条件独立性）：$P(X=x|Y=c_k)=P(X^{(1)}=x^{(1)},\cdots, X^{(n)}=x^{(n)}|Y=c_k)=\Pi^{n}_{j=1}P(X^{(j)}=x^{(j)}|Y=c_k)$</p>
+<p><strong>学习与分类算法</strong>：</p>
+<ol>
+<li>极大似然估计：$P_{\lambda}(X^{(j)}=a_{jl}|Y=c_k)=\frac{\sum_{i=1}^{N}I(x_i^{(j)}=a_{jl},y_i=c_k)}{\sum_{i=1}^{N}I(y=c_k)},\lambda\geq0$<ol>
+<li>计算先验概率：$P(Y=c_k)=\frac{\sum^N_{i=1}I(y_i=c_k)}{N}$</li>
+<li>计算条件概率：$P(X^{(j)}=a_{jl}|Y=c_k)=\frac{\sum_{i=1}^{N}I(x_i^{(j)}=a_{jl},y_i=c_k)}{\sum_{i=1}^NI(y_i=c_k)}$</li>
+<li>对于$x=(x^{(x)}, x^{(2)},\cdots,x^{(n)})^T$，计算$P(Y=c_k)\Pi^{n}_{j=1}P(X^{(j)}=x^{(j)}|Y=c_k)$</li>
+<li>确定实例$x$的类，$y=\mathrm{argmax}P(Y=c_k)\Pi^{n}_{j=1}P(X^{(j)}=x^{(j)}|Y=c_k)$</li>
+</ol>
+</li>
+<li>贝叶斯估计：$P_{\lambda}(X^{(j)}=a_{jl}|Y=c_k)=\frac{\sum_{i=1}^{N}I(x_i^{(j)}=a_{jl},y_i=c_k)+\lambda}{\sum_{i=1}^{N}I(y=c_k)+S_j\lambda}, \lambda\geq0$</li>
+</ol>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://lghigh.github.io/2021/01/16/Naive-Bayes/" data-id="ckjzu1lm7000b0vsmf6tjgp9z" data-title="Naive Bayes" class="article-share-link">分享</a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/bayes/" rel="tag">bayes</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/classification/" rel="tag">classification</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/machine-learn/" rel="tag">machine learn</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2021/01/16/Hadoop-Install-and-Deploy/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">前一篇</strong>
+      <div class="article-nav-title">
+        
+          Hadoop安装与配置
+        
+      </div>
+    </a>
+  
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/BIG-DATA/">BIG_DATA</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/BIG-DATA/DATA-PROCESSING/">DATA_PROCESSING</a></li></ul></li><li class="category-list-item"><a class="category-list-link" href="/categories/MACHINE-LEARNING/">MACHINE_LEARNING</a><ul class="category-list-child"><li class="category-list-item"><a class="category-list-link" href="/categories/MACHINE-LEARNING/NAIVE-BAYES/">NAIVE_BAYES</a></li></ul></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/bayes/" rel="tag">bayes</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/classification/" rel="tag">classification</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/deploy/" rel="tag">deploy</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/hadoop/" rel="tag">hadoop</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/install/" rel="tag">install</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/machine-learn/" rel="tag">machine learn</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/bayes/" style="font-size: 10px;">bayes</a> <a href="/tags/classification/" style="font-size: 10px;">classification</a> <a href="/tags/deploy/" style="font-size: 10px;">deploy</a> <a href="/tags/hadoop/" style="font-size: 10px;">hadoop</a> <a href="/tags/install/" style="font-size: 10px;">install</a> <a href="/tags/machine-learn/" style="font-size: 10px;">machine learn</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/01/">一月 2021</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2021/01/16/Hadoop-Install-and-Deploy/">Hadoop安装与配置</a>
+          </li>
+        
+          <li>
+            <a href="/2021/01/16/Naive-Bayes/">Naive Bayes</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2021 Wang Zeyuan<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.4.1.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>
